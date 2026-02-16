@@ -1,10 +1,14 @@
-.PHONY: setup test lint clean process format
+.PHONY: check-python setup test lint clean process format
 
 INPUT ?= examples/demo/input
 OUTPUT ?= examples/demo/output
 DONE ?= examples/demo/done
 
-setup:
+# Verify Python version matches .python-version
+check-python:
+	@python --version | grep -q "3.13" || (echo "ERROR: Python 3.13.x required. Run: pyenv install 3.13.9 && pyenv local 3.13.9" && exit 1)
+
+setup: check-python
 	uv sync --all-extras
 
 test:
