@@ -24,4 +24,4 @@ clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
 
 process:
-	uv run python -m notebook_processor process --input $(INPUT) --output $(OUTPUT) --done $(DONE)
+	uv run python -m notebook_processor process $(INPUT) --output $(OUTPUT) --done $(DONE)

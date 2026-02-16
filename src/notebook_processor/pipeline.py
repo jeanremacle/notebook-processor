@@ -8,7 +8,7 @@ from pathlib import Path
 
 from notebook_processor.archiver import NotebookArchiver
 from notebook_processor.builder import NotebookBuilder
-from notebook_processor.executor import NotebookExecutor
+from notebook_processor.executor import ExecutionError, NotebookExecutor
 from notebook_processor.exporter import NotebookExporter
 from notebook_processor.models import PipelineState
 from notebook_processor.parser import NotebookParser
@@ -104,7 +104,13 @@ class ProcessingPipeline:
 
             if "execute" not in state.completed_steps:
                 state = state.model_copy(update={"current_step": "execute"})
-                self._executor.execute(output_nb)
+                try:
+                    self._executor.execute(output_nb)
+                except ExecutionError as exc:
+                    logger.warning("Execution had errors (continuing): %s", exc)
+                    state = state.model_copy(
+                        update={"errors": [*state.errors, f"execute: {exc}"]}
+                    )
                 state = state.model_copy(
                     update={
                         "completed_steps": [
