@@ -33,12 +33,15 @@ notebook-processor = "notebook_processor.cli:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/notebook_processor"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "RUF"]
