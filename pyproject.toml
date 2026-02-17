@@ -15,6 +15,7 @@ dependencies = [
     "pydantic>=2.0",
     "click>=8.0",
     "rich>=13.0",
+    "charset-normalizer>=3.0",
     "benchmark-framework @ git+https://github.com/jeanremacle/benchmark-framework.git",
 ]
 
