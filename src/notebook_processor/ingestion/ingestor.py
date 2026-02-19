@@ -106,6 +106,80 @@ class PackageIngestor:
 
         return manifest
 
+    def ingest_project(
+        self,
+        layout: object,
+        *,
+        force: bool = False,
+    ) -> PackageManifest:
+        """Convention-aware ingestion using a :class:`ProjectLayout`.
+
+        Moves loose files in the project root into ``input/``, then runs
+        the full ingestion pipeline writing results to ``ingested/``.
+
+        Args:
+            layout: A ``ProjectLayout`` instance.
+            force: If ``True``, re-ingest even if ``ingested/manifest.json`` exists,
+                   and allow archiving when ``input/`` is already populated.
+
+        Returns:
+            The validated PackageManifest.
+        """
+        from notebook_processor.project_layout import ProjectLayout
+
+        if not isinstance(layout, ProjectLayout):
+            msg = "layout must be a ProjectLayout instance"
+            raise TypeError(msg)
+
+        layout.ensure_dirs()
+        self._archive_originals(layout, force=force)
+
+        manifest_path = layout.ingested_dir / "manifest.json"
+        if manifest_path.exists() and not force:
+            import json
+
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            return PackageManifest.model_validate(data)
+
+        if force and layout.ingested_dir.exists():
+            shutil.rmtree(layout.ingested_dir)
+            layout.ingested_dir.mkdir()
+
+        return self.ingest(layout.input_dir, layout.ingested_dir)
+
+    @staticmethod
+    def _archive_originals(
+        layout: object,
+        *,
+        force: bool = False,
+    ) -> None:
+        """Move loose files from the project root into ``input/``.
+
+        Args:
+            layout: A ``ProjectLayout`` instance.
+            force: If ``True``, allow archiving even when ``input/`` is populated.
+        """
+        from notebook_processor.project_layout import ProjectLayout
+
+        if not isinstance(layout, ProjectLayout):
+            msg = "layout must be a ProjectLayout instance"
+            raise TypeError(msg)
+
+        if not layout.has_loose_files():
+            return
+
+        if layout.input_already_populated() and not force:
+            msg = (
+                f"input/ already contains files and loose files exist in "
+                f"{layout.root}. Use force=True to overwrite."
+            )
+            raise FileExistsError(msg)
+
+        layout.input_dir.mkdir(parents=True, exist_ok=True)
+        for child in layout.root.iterdir():
+            if child.name not in ProjectLayout._SUBDIRS:
+                shutil.move(str(child), str(layout.input_dir / child.name))
+
     @staticmethod
     def _copy_files(
         raw_dir: Path,

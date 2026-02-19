@@ -1,10 +1,6 @@
-.PHONY: check-python setup test lint clean process format ingest
+.PHONY: check-python setup test lint clean process format ingest run
 
-INPUT ?= examples/demo/input
-OUTPUT ?= examples/demo/output
-DONE ?= examples/demo/done
-INGEST_INPUT ?= examples/jhu-demo/raw
-INGEST_OUTPUT ?= examples/jhu-demo/assignments/demo
+PROJECT ?= examples/jhu-demo
 
 # Verify Python version matches .python-version
 check-python:
@@ -29,8 +25,11 @@ clean:
 	rm -rf .venv __pycache__ .pytest_cache .mypy_cache .ruff_cache
 	find . -type d -name __pycache__ -exec rm -rf {} +
 
-process:
-	uv run python -m notebook_processor process $(INPUT) --output $(OUTPUT) --done $(DONE)
-
 ingest:
-	uv run python -m notebook_processor ingest $(INGEST_INPUT) --output $(INGEST_OUTPUT)
+	uv run python -m notebook_processor ingest $(PROJECT)
+
+process:
+	uv run python -m notebook_processor process $(PROJECT)
+
+run:
+	uv run python -m notebook_processor run $(PROJECT)

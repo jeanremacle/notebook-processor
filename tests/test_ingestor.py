@@ -228,3 +228,101 @@ class TestPackageIngestor:
         data = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
         restored = PackageManifest.model_validate(data)
         assert restored.package.id == "pkg"
+
+
+def _make_project_with_loose_files(tmp_path: Path) -> Path:
+    """Create a project root with loose files (not yet in input/)."""
+    project = tmp_path / "project"
+    project.mkdir()
+
+    nb = {
+        "nbformat": 4,
+        "nbformat_minor": 5,
+        "metadata": {
+            "kernelspec": {
+                "name": "python3",
+                "display_name": "Python 3",
+                "language": "python",
+            }
+        },
+        "cells": [
+            {
+                "cell_type": "code",
+                "source": "# TODO: implement",
+                "metadata": {},
+                "execution_count": None,
+                "id": "cell-1",
+                "outputs": [],
+            }
+        ],
+    }
+    (project / "homework.ipynb").write_text(json.dumps(nb), encoding="utf-8")
+    (project / "instructions.md").write_text("# HW\n", encoding="utf-8")
+    return project
+
+
+class TestIngestProject:
+    def test_ingest_project(
+        self, ingestor: PackageIngestor, tmp_path: Path
+    ) -> None:
+        """Loose files move to input/, ingestion writes to ingested/."""
+        from notebook_processor.project_layout import ProjectLayout
+
+        project = _make_project_with_loose_files(tmp_path)
+        layout = ProjectLayout(project)
+
+        manifest = ingestor.ingest_project(layout)
+
+        assert isinstance(manifest, PackageManifest)
+        # Loose files moved to input/
+        assert not (project / "homework.ipynb").exists()
+        assert (layout.input_dir / "homework.ipynb").exists()
+        # Ingestion output in ingested/
+        assert (layout.ingested_dir / "manifest.json").exists()
+
+    def test_ingest_project_skip_cached(
+        self, ingestor: PackageIngestor, tmp_path: Path
+    ) -> None:
+        """If ingested/manifest.json exists, return cached manifest."""
+        from notebook_processor.project_layout import ProjectLayout
+
+        project = _make_project_with_loose_files(tmp_path)
+        layout = ProjectLayout(project)
+
+        # First run
+        manifest1 = ingestor.ingest_project(layout)
+
+        # Second run should return cached
+        manifest2 = ingestor.ingest_project(layout)
+        assert manifest2.package.id == manifest1.package.id
+
+    def test_ingest_project_force(
+        self, ingestor: PackageIngestor, tmp_path: Path
+    ) -> None:
+        """force=True re-ingests even when cached."""
+        from notebook_processor.project_layout import ProjectLayout
+
+        project = _make_project_with_loose_files(tmp_path)
+        layout = ProjectLayout(project)
+
+        ingestor.ingest_project(layout)
+        # Force re-ingest
+        manifest = ingestor.ingest_project(layout, force=True)
+        assert isinstance(manifest, PackageManifest)
+        assert (layout.ingested_dir / "manifest.json").exists()
+
+    def test_archive_originals_conflict(
+        self, ingestor: PackageIngestor, tmp_path: Path
+    ) -> None:
+        """Raises FileExistsError when input/ has content and loose files exist."""
+        from notebook_processor.project_layout import ProjectLayout
+
+        project = _make_project_with_loose_files(tmp_path)
+        layout = ProjectLayout(project)
+        layout.ensure_dirs()
+
+        # Put something in input/ to create a conflict
+        (layout.input_dir / "existing.txt").write_text("old")
+
+        with pytest.raises(FileExistsError):
+            ingestor._archive_originals(layout)

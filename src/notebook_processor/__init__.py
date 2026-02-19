@@ -8,6 +8,7 @@ from notebook_processor.models import (
     NotebookContent,
     PipelineState,
 )
+from notebook_processor.project_layout import ProjectLayout
 
 __all__ = [
     "CellStatus",
@@ -16,4 +17,5 @@ __all__ = [
     "NotebookCell",
     "NotebookContent",
     "PipelineState",
+    "ProjectLayout",
 ]

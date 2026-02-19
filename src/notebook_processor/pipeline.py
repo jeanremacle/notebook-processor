@@ -31,7 +31,7 @@ class ProcessingPipeline:
         self,
         input_dir: str | Path,
         output_dir: str | Path,
-        done_dir: str | Path,
+        done_dir: str | Path | None,
         solver: NotebookSolver,
     ) -> PipelineState:
         """Run the full processing pipeline.
@@ -39,7 +39,7 @@ class ProcessingPipeline:
         Args:
             input_dir: Directory with the source notebook.
             output_dir: Directory for processed output.
-            done_dir: Directory for archived originals.
+            done_dir: Directory for archived originals. ``None`` skips archiving.
             solver: Solver to complete TODO cells.
 
         Returns:
@@ -47,7 +47,7 @@ class ProcessingPipeline:
         """
         input_path = Path(input_dir)
         output_path = Path(output_dir)
-        done_path = Path(done_dir)
+        done_path = Path(done_dir) if done_dir is not None else None
         output_path.mkdir(parents=True, exist_ok=True)
 
         state = self._load_or_create_state(input_path, output_path, done_path)
@@ -136,8 +136,9 @@ class ProcessingPipeline:
                 self._save_state(state, output_path)
 
             if "archive" not in state.completed_steps:
-                state = state.model_copy(update={"current_step": "archive"})
-                self._archiver.archive(input_path, done_path)
+                if done_path is not None:
+                    state = state.model_copy(update={"current_step": "archive"})
+                    self._archiver.archive(input_path, done_path)
                 state = state.model_copy(
                     update={
                         "completed_steps": [
@@ -158,11 +159,37 @@ class ProcessingPipeline:
         self._save_state(state, output_path)
         return state
 
+    def run_project(
+        self,
+        layout: object,
+        solver: NotebookSolver,
+        *,
+        run_name: str | None = None,
+    ) -> PipelineState:
+        """Convention-aware wrapper using a :class:`ProjectLayout`.
+
+        Args:
+            layout: A ``ProjectLayout`` instance providing path resolution.
+            solver: Solver to complete TODO cells.
+            run_name: Optional custom run name; auto-sequential if ``None``.
+
+        Returns:
+            Final pipeline state.
+        """
+        from notebook_processor.project_layout import ProjectLayout
+
+        if not isinstance(layout, ProjectLayout):
+            msg = "layout must be a ProjectLayout instance"
+            raise TypeError(msg)
+
+        run_dir = layout.run_dir(run_name)
+        return self.run(layout.ingested_dir, run_dir, done_dir=None, solver=solver)
+
     def _load_or_create_state(
         self,
         input_path: Path,
         output_path: Path,
-        done_path: Path,
+        done_path: Path | None,
     ) -> PipelineState:
         """Load existing state or create a new one."""
         state_file = output_path / "state.json"
@@ -172,7 +199,7 @@ class ProcessingPipeline:
         return PipelineState(
             input_path=str(input_path),
             output_path=str(output_path),
-            done_path=str(done_path),
+            done_path=str(done_path) if done_path is not None else None,
             current_step="parse",
         )
 

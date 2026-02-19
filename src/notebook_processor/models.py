@@ -63,7 +63,7 @@ class PipelineState(BaseModel):
 
     input_path: str
     output_path: str
-    done_path: str
+    done_path: str | None = None
     current_step: str
     completed_steps: list[str] = []
     errors: list[str] = []

@@ -38,3 +38,6 @@ examples/demo/output/*
 !examples/demo/output/.gitkeep
 examples/demo/done/*
 !examples/demo/done/.gitkeep
+examples/jhu-demo/input/
+examples/jhu-demo/ingested/
+examples/jhu-demo/output/

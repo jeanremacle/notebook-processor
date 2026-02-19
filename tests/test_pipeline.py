@@ -166,3 +166,49 @@ class TestProcessingPipeline:
         # should succeed since the NotImplementedError is replaced.
         state = pipeline.run(input_dir, output_dir, done_dir, solver)
         assert "execute" in state.completed_steps
+
+    def test_pipeline_no_done_dir(
+        self,
+        pipeline: ProcessingPipeline,
+        demo_input: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Archive step is skipped when done_dir is None."""
+        output_dir = tmp_path / "output"
+        solver = StubSolver()
+
+        state = pipeline.run(demo_input, output_dir, None, solver)
+
+        assert "archive" in state.completed_steps
+        assert state.done_path is None
+        # No done directory was created
+        assert not (tmp_path / "done").exists()
+
+    def test_run_project(
+        self,
+        pipeline: ProcessingPipeline,
+        tmp_path: Path,
+    ) -> None:
+        """run_project uses ProjectLayout to resolve paths."""
+        from notebook_processor.project_layout import ProjectLayout
+
+        layout = ProjectLayout(tmp_path)
+        layout.ensure_dirs()
+
+        # Set up a notebook in the ingested directory
+        nb = nbformat.v4.new_notebook()
+        nb.metadata["kernelspec"] = {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3",
+        }
+        nb.cells.append(nbformat.v4.new_code_cell("x = 1 + 1"))
+        nbformat.write(nb, str(layout.ingested_dir / "test.ipynb"))
+
+        solver = StubSolver()
+        state = pipeline.run_project(layout, solver)
+
+        assert "archive" in state.completed_steps
+        assert state.done_path is None
+        # Output should land in run-001
+        assert (layout.output_dir / "run-001" / "test_completed.ipynb").exists()
