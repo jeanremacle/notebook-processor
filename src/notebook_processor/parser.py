@@ -65,7 +65,7 @@ class NotebookParser:
         """
         input_path = Path(input_dir)
         notebook_path = self._find_notebook(input_path)
-        nb = nbformat.read(str(notebook_path), as_version=4)  # type: ignore[no-untyped-call]
+        nb = nbformat.read(str(notebook_path), as_version=4)
 
         cells = self._extract_cells(nb)
         metadata = dict(nb.metadata)

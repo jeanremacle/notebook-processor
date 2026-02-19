@@ -75,9 +75,7 @@ class TestDataSchema:
         assert schema.null_counts["score"] == 3
 
     def test_serialization_roundtrip(self) -> None:
-        schema = DataSchema(
-            columns=["x"], row_count=5, dtypes={"x": "int64"}
-        )
+        schema = DataSchema(columns=["x"], row_count=5, dtypes={"x": "int64"})
         restored = DataSchema.model_validate(schema.model_dump())
         assert restored == schema
 
@@ -441,9 +439,7 @@ class TestTransformationLogger:
         entries.clear()
         assert len(logger.entries) == 1
 
-    def test_multiple_entries(
-        self, logger: TransformationLogger
-    ) -> None:
+    def test_multiple_entries(self, logger: TransformationLogger) -> None:
         logger.log(
             DataTransformation(
                 original_path="a.csv",
@@ -472,9 +468,7 @@ class TestTransformationLogger:
         assert "1 transformation(s)" in summary
         assert "encoding" in summary
 
-    def test_get_summary_multiple(
-        self, logger: TransformationLogger
-    ) -> None:
+    def test_get_summary_multiple(self, logger: TransformationLogger) -> None:
         logger.log(
             DataTransformation(
                 original_path="a.csv",
@@ -539,9 +533,7 @@ class TestTransformationLogger:
         content = log_path.read_text(encoding="utf-8")
         assert "Confidence: 85%" in content
 
-    def test_save_empty(
-        self, tmp_path: Path, logger: TransformationLogger
-    ) -> None:
+    def test_save_empty(self, tmp_path: Path, logger: TransformationLogger) -> None:
         log_path = tmp_path / "transformations.log"
         logger.save(log_path)
         content = log_path.read_text(encoding="utf-8")

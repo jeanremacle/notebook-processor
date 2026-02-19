@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import papermill as pm  # type: ignore[import-untyped]
+import papermill as pm
 
 logger = logging.getLogger(__name__)
 

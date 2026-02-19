@@ -27,13 +27,13 @@ class NotebookBuilder:
         output.parent.mkdir(parents=True, exist_ok=True)
 
         nb = self._create_notebook(content)
-        nbformat.write(nb, str(output))  # type: ignore[no-untyped-call]
+        nbformat.write(nb, str(output))
         return output
 
     def _create_notebook(self, content: NotebookContent) -> Any:
         """Create an nbformat notebook node from content."""
-        nb = nbformat.v4.new_notebook()  # type: ignore[no-untyped-call]
-        nb.metadata = nbformat.from_dict(content.metadata)  # type: ignore[no-untyped-call]
+        nb = nbformat.v4.new_notebook()
+        nb.metadata = nbformat.from_dict(content.metadata)
 
         for cell in content.cells:
             nb_cell = self._create_cell(cell.cell_type, cell.source)
@@ -41,10 +41,7 @@ class NotebookBuilder:
             if cell.status == CellStatus.COMPLETED and cell.cell_type == CellType.CODE:
                 nb_cell.outputs = []
             elif cell.cell_type == CellType.CODE and cell.outputs:
-                nb_cell.outputs = [
-                    nbformat.from_dict(o)  # type: ignore[no-untyped-call]
-                    for o in cell.outputs
-                ]
+                nb_cell.outputs = [nbformat.from_dict(o) for o in cell.outputs]
             nb.cells.append(nb_cell)
 
         return nb
@@ -52,7 +49,7 @@ class NotebookBuilder:
     def _create_cell(self, cell_type: CellType, source: str) -> Any:
         """Create an nbformat cell node."""
         if cell_type == CellType.CODE:
-            return nbformat.v4.new_code_cell(source)  # type: ignore[no-untyped-call]
+            return nbformat.v4.new_code_cell(source)
         if cell_type == CellType.MARKDOWN:
-            return nbformat.v4.new_markdown_cell(source)  # type: ignore[no-untyped-call]
-        return nbformat.v4.new_raw_cell(source)  # type: ignore[no-untyped-call]
+            return nbformat.v4.new_markdown_cell(source)
+        return nbformat.v4.new_raw_cell(source)

@@ -43,8 +43,8 @@ class NotebookExporter:
 
         logger.info("Exporting notebook to HTML: %s", nb_path)
 
-        nb = nbformat.read(str(nb_path), as_version=4)  # type: ignore[no-untyped-call]
-        exporter = nbconvert.HTMLExporter()  # type: ignore[no-untyped-call]
+        nb = nbformat.read(str(nb_path), as_version=4)
+        exporter = nbconvert.HTMLExporter()
         body: str
         body, _ = exporter.from_notebook_node(nb)
 

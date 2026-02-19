@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def _benchmark_available() -> bool:
     """Check if benchmark-framework is installed."""
     try:
-        import benchmark_framework  # type: ignore[import-untyped]  # noqa: F401
+        import benchmark_framework  # noqa: F401
 
         return True
     except ImportError:
@@ -73,7 +73,7 @@ def run_benchmark(config_dir: str | Path, output_dir: str | Path) -> str | None:
     if not _benchmark_available():
         return None
 
-    from benchmark_framework.api import execute_run, generate_report  # type: ignore[import-untyped]  # noqa: I001
+    from benchmark_framework.api import execute_run, generate_report
 
     config_path = Path(config_dir)
     output_path = Path(output_dir)
