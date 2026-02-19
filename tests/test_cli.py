@@ -91,3 +91,26 @@ class TestCLI:
         runner = CliRunner()
         result = runner.invoke(main, ["parse", "/nonexistent/path"])
         assert result.exit_code != 0
+
+    def test_ingest_command(self, tmp_path: Path) -> None:
+        raw = tmp_path / "raw"
+        raw.mkdir()
+
+        # Minimal notebook
+        nb = nbformat.v4.new_notebook()
+        nb.metadata["kernelspec"] = {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3",
+        }
+        nb.cells.append(nbformat.v4.new_code_cell("# TODO: implement"))
+        nbformat.write(nb, str(raw / "hw.ipynb"))
+
+        target = tmp_path / "pkg"
+        runner = CliRunner()
+        result = runner.invoke(
+            main, ["ingest", str(raw), "--output", str(target)]
+        )
+        assert result.exit_code == 0
+        assert "Assets" in result.output
+        assert (target / "manifest.json").exists()

@@ -12,6 +12,7 @@ from rich.logging import RichHandler
 
 from notebook_processor.executor import NotebookExecutor
 from notebook_processor.exporter import NotebookExporter
+from notebook_processor.ingestion.ingestor import PackageIngestor
 from notebook_processor.parser import NotebookParser
 from notebook_processor.pipeline import ProcessingPipeline
 from notebook_processor.solver import StubSolver
@@ -112,3 +113,31 @@ def export_cmd(notebook_path: str, fmt: str, output: str | None) -> None:
     out = output if output else None
     result = exporter.export_html(notebook_path, out)
     console.print(f"[green]Exported ({fmt}):[/green] {result}")
+
+
+@main.command()
+@click.argument("input_dir", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    required=True,
+    help="Target package directory.",
+)
+def ingest(input_dir: str, output: str) -> None:
+    """Ingest a raw assignment folder into a normalized package."""
+    raw_path = Path(input_dir)
+    target_path = Path(output)
+
+    ingestor = PackageIngestor()
+
+    console.print(f"[bold]Ingesting:[/bold] {raw_path} → {target_path}")
+    manifest = ingestor.ingest(raw_path, target_path)
+
+    analysis = manifest.notebook.analysis
+    console.print(f"[green]Assets:[/green] {len(manifest.assets)} files")
+    if analysis:
+        console.print(f"[green]TODO markers:[/green] {len(analysis.todo_markers)}")
+        console.print(f"[green]Images extracted:[/green] {analysis.embedded_images_count}")
+        console.print(f"[green]Dependencies:[/green] {', '.join(analysis.dependencies) or 'none'}")
+    console.print(f"[green]Manifest:[/green] {target_path / 'manifest.json'}")
