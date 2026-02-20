@@ -1,5 +1,7 @@
 """Notebook Processor — automated pipeline for Jupyter Notebook assignments."""
 
+__version__ = "0.1.0"
+
 from notebook_processor.models import (
     CellStatus,
     CellType,
