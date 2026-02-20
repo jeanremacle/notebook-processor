@@ -90,3 +90,41 @@ class TestNotebookExecutor:
         result = executor.execute(nb_path)
         nb = nbformat.read(str(result), as_version=4)
         assert all(c.execution_count is not None for c in nb.cells)
+
+    def test_kernel_launch_failure_raises_execution_error(
+        self, executor: NotebookExecutor, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A kernel launch failure (e.g. stale kernel path) should raise ExecutionError."""
+        nb_path = _create_notebook(tmp_path / "test.ipynb", ["x = 1"])
+
+        # Simulate a kernel launch failure by making pm.execute_notebook
+        # raise FileNotFoundError (as happens with stale kernel specs)
+        def _fake_execute(**kwargs: object) -> None:
+            raise FileNotFoundError("No such file or directory: '/stale/path/python3'")
+
+        import papermill as pm
+
+        monkeypatch.setattr(pm, "execute_notebook", _fake_execute)
+
+        with pytest.raises(ExecutionError, match="stale/path"):
+            executor.execute(nb_path)
+
+    def test_ensure_kernel_called(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """_ensure_kernel is called before execution."""
+        nb_path = _create_notebook(tmp_path / "test.ipynb", ["x = 1"])
+
+        called = {"count": 0}
+        original_ensure = NotebookExecutor._ensure_kernel
+
+        @staticmethod  # type: ignore[misc]
+        def _tracking_ensure(kernel_name: str | None) -> None:
+            called["count"] += 1
+            original_ensure(kernel_name)
+
+        monkeypatch.setattr(NotebookExecutor, "_ensure_kernel", _tracking_ensure)
+
+        executor = NotebookExecutor()
+        executor.execute(nb_path)
+        assert called["count"] == 1
