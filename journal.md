@@ -44,3 +44,10 @@
 **Summary**: Stale `python3` Jupyter kernel spec crashed the pipeline. Fixed by auto-detecting and re-registering the kernel, plus broadening exception handling in the executor. 236 tests pass.
 **Branch**: `fix/1-executor-kernel-crash`
 **Blockers**: None
+
+### 2026-02-20T11:00:00Z — Issue #2: Add unit tests for _ensure_kernel
+**Status**: Complete
+**Issue**: [#2](https://github.com/jeanremacle/notebook-processor/issues/2)
+**Summary**: Added 5 unit tests for `_ensure_kernel` stale-kernel detection logic (bug #1 fix). Previous tests only monkeypatched at the papermill level. Committed directly to `develop` without a feature branch. 241 tests pass.
+**Commit**: `test: add unit tests for _ensure_kernel stale-kernel detection` (edeef77)
+**Blockers**: None
