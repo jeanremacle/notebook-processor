@@ -39,22 +39,8 @@
 **Blockers**: None
 
 ### 2026-02-20T10:00:00Z — Bug #1: Executor crashes on stale kernel path
-**Status**: Complete
-**Branch**: `fix/1-executor-kernel-crash` (from `develop`)
+**Status**: Fixed, merged into `develop`, v0.1.1
 **Issue**: [#1](https://github.com/jeanremacle/notebook-processor/issues/1)
-**Root cause**: The registered `python3` Jupyter kernel pointed to a stale `.venv/bin/python3` path from a Dropbox directory. The executor only caught `PapermillExecutionError`, so `FileNotFoundError` from the kernel launcher crashed the entire pipeline.
-**Fix**:
-- `executor.py`: Added `_ensure_kernel()` — detects stale kernel specs and re-registers using current `sys.executable`
-- `executor.py`: Broadened exception handling to catch all execution errors, not just `PapermillExecutionError`
-- Added 2 new unit tests for kernel launch failure and `_ensure_kernel` invocation
-**Changes**:
-- MODIFIED: `src/notebook_processor/executor.py`
-- MODIFIED: `tests/test_executor.py`
-- NEW: `CHANGELOG.md`
-- MODIFIED: `src/notebook_processor/__init__.py` — `__version__ = "0.1.1"`
-- MODIFIED: `pyproject.toml` — dynamic versioning via hatchling
-- NEW: `examples/jhu-week9-midterm-project/` — real-world test fixture
-**Verification**: 236 tests pass, mypy clean. Real-world notebook runs successfully (kernel auto-fixed, pipeline completes with expected cell-level errors from StubSolver).
-**Time to completion**: ~30 minutes
-**Next**: Merge into `develop`
+**Summary**: Stale `python3` Jupyter kernel spec crashed the pipeline. Fixed by auto-detecting and re-registering the kernel, plus broadening exception handling in the executor. 236 tests pass.
+**Branch**: `fix/1-executor-kernel-crash`
 **Blockers**: None
