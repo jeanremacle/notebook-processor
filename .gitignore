@@ -41,3 +41,6 @@ examples/demo/done/*
 examples/jhu-demo/input/
 examples/jhu-demo/ingested/
 examples/jhu-demo/output/
+examples/jhu-week9-midterm-project/input/
+examples/jhu-week9-midterm-project/ingested/
+examples/jhu-week9-midterm-project/output/

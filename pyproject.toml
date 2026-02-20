@@ -1,6 +1,6 @@
 [project]
 name = "notebook-processor"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Automated pipeline for processing Jupyter Notebook assignments"
 readme = "README.md"
 license = {text = "MIT"}
@@ -35,6 +35,9 @@ notebook-processor = "notebook_processor.cli:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/notebook_processor/__init__.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
